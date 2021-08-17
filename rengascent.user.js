@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         RenGascent NGA
-// @version      2.2
+// @version      2.2.1
 // @description  RenGascent 论坛代码编辑器
 // @author       Chigusa0w0
 // @copyright    2021, Chigusa0w0 (https://github.com/Chigusa0w0)
@@ -23,10 +23,11 @@
 // ==/UserScript==
 
 // 版本历史
+// 2.2.1:
+//   + 可视化编辑器兼容性
 // 2.2:
 //   Morula 更新
 //   + 语法检查
-//   + 智能补全
 //   + 用户体验优化
 // 2.1:
 //   Moana 更新
@@ -49,6 +50,7 @@
     const inputBufferDelay = 200;
 
     var textarea;
+    var editarea;
     var viewarea;
     var prevarea;
     var prevtext;
@@ -102,6 +104,16 @@
                 let cur = onto.editor.getSelection();
                 onto.editor.setSelection(posToRange(cur.startLineNumber, cur.startColumn,
                                                     pos.lineNumber, pos.column));
+            }
+        });
+
+        Object.defineProperty(onto.style, "display", {
+            get: function() {
+                return editarea.style.display;
+            },
+            set: function(val) {
+                editarea.style.display = val;
+                viewarea.style.display = val;
             }
         });
 
@@ -329,6 +341,7 @@
     const installMonaco = function(parent) {
         // load monaco in seperate page to avoid conflict
         let iframe = document.createElement('iframe');
+        editarea = iframe;
         iframe.src = '/nuke.php'; // create iframe with webpage hollowing to bypass CORS
         iframe.id = 'monaco';
         iframe.style.background = themedBackground ? unsafeWindow.__COLOR.bg0 : "#ffffff";
