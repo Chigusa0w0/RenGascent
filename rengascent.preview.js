@@ -1,6 +1,8 @@
 const previewRoutines = function(env, doc) {
-    env.onerror = function(e) {
-        renderbugfix = true;
+    env.onerror = function(message, source, lineno, colno, error) {
+        env.viewarea.renderbugfix = true;
+        console.error(`Preview Frame Error:\n${message} ${source} ${lineno} ${colno}\n${error}`);
+        return true;
     }
 
     env.cleanup = function() {

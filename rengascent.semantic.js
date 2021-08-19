@@ -77,8 +77,7 @@ const bbcodeTokenizer = {
         ],
 
         style: [
-            [/(height|width|background|rotate|scale|margin|padding|clear|float|top|bottom|left|right|align|width|height|border-radius|line-height|font|src|background|color|dybg|innerHTML)/.source, 'attribute.name'],
-            [/parentfitwidth/.source, 'bug'],
+            [/(height|width|background|rotate|scale|margin|padding|clear|float|top|bottom|left|right|align|width|height|border-radius|line-height|font|src|background|color|dybg|innerHTML|parentfitwidth)/.source, 'attribute.name'],
             [/[^\s\]]+/.source, 'attribute.value'],
             [/\]/.source, 'delimiter', '@pop'],
         ],

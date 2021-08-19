@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         RenGascent NGA
-// @version      2.2.2
+// @version      2.2.3
 // @description  RenGascent 论坛代码编辑器
 // @author       Chigusa0w0
 // @copyright    2021, Chigusa0w0 (https://github.com/Chigusa0w0)
@@ -17,12 +17,17 @@
 // @grant        GM_getValue
 // @grant        unsafeWindow
 // @require      https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js
-// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@master/rengascent.semantic.js
-// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@master/rengascent.syntax.js
-// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@master/rengascent.preview.js
+// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@v2.2.3/rengascent.semantic.js
+// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@v2.2.3/rengascent.syntax.js
+// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@v2.2.3/rengascent.preview.js
 // ==/UserScript==
 
 // 版本历史
+// 2.2.3:
+//   + 语法提示消息优化
+//   + TamperMonkey 缓存应对
+//   + 修复语法提示中若干罕见 bug
+//   + 修复即时预览灾难恢复的 bug
 // 2.2.2:
 //   + 预览窗口自动响应
 //   + 文本格式快捷键
@@ -47,9 +52,6 @@
 (function() {
     'use strict';
 
-    // 编辑器是否跟随 NGA 使用屎黄/绿/蓝/粉色背景 (如否则为白色)
-    const themedBackground = true;
-
     // 设置 X 毫秒无输入后进行即时预览渲染
     const inputBufferDelay = 200;
 
@@ -60,7 +62,6 @@
     var prevtext;
     var backup;
     var renderdelay;
-    var renderbugfix;
 
     // iframe source. keep it simple
     const monacoEnvironment = '<!DOCTYPE html><html style="height:100%"><head> <base href="https:\/\/cdn.jsdelivr.net\/npm\/monaco-editor@0.26.1\/min\/"> <style>#loading .spinner{margin: 100px auto; width: 50px; height: 40px; text-align: center; font-size: 10px}#loading .spinner>div{background-color: #333; height: 100%; width: 6px; display: inline-block; -webkit-animation: sk-stretchdelay 1.2s infinite ease-in-out; animation: sk-stretchdelay 1.2s infinite ease-in-out}#loading .spinner .rect2{-webkit-animation-delay: -1.1s; animation-delay: -1.1s}#loading .spinner .rect3{-webkit-animation-delay: -1s; animation-delay: -1s}#loading .spinner .rect4{-webkit-animation-delay: -.9s; animation-delay: -.9s}#loading .spinner .rect5{-webkit-animation-delay: -.8s; animation-delay: -.8s}@-webkit-keyframes sk-stretchdelay{0%, 100%, 40%{-webkit-transform: scaleY(.4)}20%{-webkit-transform: scaleY(1)}}@keyframes sk-stretchdelay{0%, 100%, 40%{transform: scaleY(.4); -webkit-transform: scaleY(.4)}20%{transform: scaleY(1); -webkit-transform: scaleY(1)}}<\/style> <link data-name="vs\/editor\/editor.main" rel="stylesheet" href="https:\/\/cdn.jsdelivr.net\/npm\/monaco-editor@0.26.1\/min\/vs\/editor\/editor.main.css"\/> <style type="text\/css"> body{margin: 0; padding: 0; border: 0; overflow: hidden;}<\/style><\/head><body> <div id="loading"> <div class="spinner"> <div class="rect1"><\/div><div class="rect2"><\/div><div class="rect3"><\/div><div class="rect4"><\/div><div class="rect5"><\/div><\/div><\/div><div id="container" style="height:100%;"><\/div><script>var require={paths:{"vs": "https:\/\/cdn.jsdelivr.net\/npm\/monaco-editor@0.26.1\/min\/vs"}, "vs\/nls":{availableLanguages:{"*": "zh-cn"}}}; window.MonacoEnvironment={getWorkerUrl: function (workerId, label){let encoded=[ `self.MonacoEnvironment={`, `baseUrl: "https:\/\/cdn.jsdelivr.net\/npm\/monaco-editor@0.26.1\/min\/"`, `};`, `importScripts("https:\/\/cdn.jsdelivr.net\/npm\/monaco-editor@0.26.1\/min\/vs\/base\/worker\/workerMain.js");`,].join(" "); return `data:text\/javascript;charset=utf-8,${encodeURIComponent(encoded)}`;}}; <\/script> <script src="https:\/\/cdn.jsdelivr.net\/npm\/monaco-editor@0.26.1\/min\/vs\/loader.js"><\/script> <script type="text\/javascript">var geval=eval; require(["require", "vs\/editor\/editor.main"], function (require){"use strict"; var loading=document.getElementById("loading"); loading.parentNode.removeChild(loading); document.body.style.height="100%"; var container=document.getElementById("container"); if (window.preInit){window.preInit(container, monaco);}var editor=monaco.editor.create(container,{theme: "bbcode", value: "正在加载内容...", language: "bbcode", readOnly: false, scrollBeyondLastLine: false, automaticLayout: true, colorDecorators: true, renderControlCharacters: true, renderValidationDecorations: "on", autoClosingBrackets: "always", autoIndent: "keep", autoSurround: "brackets", copyWithSyntaxHighlighting: false, detectIndentation: false, insertSpaces: true, renderWhitespace: "all", scrollbar:{alwaysConsumeMouseWheel: false}, wordWrap: "on"}); if (window.postInit){window.postInit(container, editor, monaco);}}); <\/script><\/body><\/html>';
@@ -147,7 +148,7 @@
         // restore content
         onto.editor.setValue(content);
         backup = content;
-        refreshPreview(null, true);
+        refreshPreview(null);
         refreshSyntax(null);
 
         // restore dom relation
@@ -158,22 +159,21 @@
 
     // --- event handler ---
 
-    const refreshPreview = function(e, allowRecursive) {
+    const refreshPreview = function(e) {
         try {
-            if (renderbugfix) {
-                // eighth calamity is there
-                let parent = viewarea.parentNode;
-                $(viewarea).remove();
-                installMoana(parent, allowRecursive);
-            }
-            else {
-                // everything is fine
-                if (viewarea.vmStart !== null && viewarea.vmStart !== undefined) {
-                    renderbugfix = viewarea.vmStart(textarea.value);
+            if (viewarea.vmStart !== null && viewarea.vmStart !== undefined) {
+                if (viewarea.renderbugfix) {
+                    // eighth calamity is there
+                    recoveryPreview();
+                    viewarea.renderbugfix = viewarea.vmStart(textarea.value);
+                }
+                else {
+                    // everything is fine
+                    viewarea.renderbugfix = viewarea.vmStart(textarea.value);
                 }
             }
         } catch(e) {
-            renderbugfix = true;
+            viewarea.renderbugfix = true;
         }
     }
 
@@ -195,9 +195,18 @@
             textarea.monaco.editor.setModelMarkers(model, "rengascent", markers);
         }
         catch(e) {
-            renderbugfix = true;
+            viewarea.renderbugfix = true;
         }
     }
+
+    const recoveryPreview = function() {
+        viewarea.contentDocument.location.reload();
+    }
+
+    const doSubmit = function() {
+        prevtext = textarea.value;
+        document.querySelector("table.stdbtn a.uitxt1").click();
+    };
 
     const shortcutKeydown = function(e) {
         let pfn = unsafeWindow.postfunc;
@@ -208,7 +217,7 @@
         if (e.ctrlKey && !e.shiftKey) {
             propagate = false;
             switch (e.keyCode) {
-                case 13: /* + enter */ document.querySelector("table.stdbtn a.uitxt1").click(); break;
+                case 13: /* + enter */ doSubmit(); break;
 
                 case 66: /* + b */ unsafeWindow.postfunc.addTag("b"); break;
                 case 68: /* + d */ unsafeWindow.postfunc.addTag("del"); break;
@@ -306,7 +315,7 @@
         onto.editor.getModel().onDidChangeContent((e) => {
             clearTimeout(renderdelay);
             renderdelay = setTimeout((e) => {
-                refreshPreview(e, true);
+                refreshPreview(e);
                 refreshSyntax(e);
             }, inputBufferDelay);
         });
@@ -363,6 +372,17 @@
         adaptEvents(dom);
     };
 
+    const moanaRecoverySetup = function() {
+        if (document.getElementById('moanaManualRefresh')) return;
+
+        var container = document.getElementById('post_subject').parentNode;
+        $(container).append('<button id="moanaManualRefresh">重置预览框</button>');
+        var button = document.getElementById('moanaManualRefresh');
+        $(button).click(() => {
+            recoveryPreview();
+        });
+    }
+
     const moanaPre = function(env, doc) {
         previewRoutines(env, doc);
     };
@@ -386,7 +406,7 @@
         editarea = iframe;
         iframe.src = '/nuke.php'; // create iframe with webpage hollowing to bypass CORS
         iframe.id = 'monaco';
-        iframe.style.background = themedBackground ? unsafeWindow.__COLOR.bg0 : "#ffffff";
+        iframe.style.background = unsafeWindow.__COLOR.bg0;
         iframe.style.border = '1px solid lightgrey';
         iframe.style.borderRadius = '3px';
         iframe.style.boxSizing = 'border-box';
@@ -395,7 +415,6 @@
         iframe.style.padding = '0 0 10px';
         iframe.style.resize = 'vertical';
         iframe.style.width = '100%';
-        iframe.frameborder = '0';
         parent.append(iframe);
 
         iframe.addEventListener('load', function (e) {
@@ -410,7 +429,7 @@
         });
     };
 
-    const installMoana = function(parent, callRender) {
+    const installMoana = function(parent) {
         // this is also done for moana
         let iframe = document.createElement('iframe');
         viewarea = iframe;
@@ -425,9 +444,9 @@
         iframe.style.padding = '0 0 10px';
         iframe.style.resize = 'vertical';
         iframe.style.width = '100%';
-        iframe.frameborder = '0';
+        iframe.renderbugfix = false;
         parent.append(iframe);
-        renderbugfix = false;
+        moanaRecoverySetup();
 
         iframe.addEventListener('load', function (e) {
             // set up event handlers
@@ -443,10 +462,8 @@
             iframe.contentDocument.close();
 
             iframe.vmStart = iframe.contentWindow.vmStart;
-            if (callRender) {
-                refreshPreview(null, false);
-                refreshSyntax(null);
-            }
+            refreshPreview(null);
+            refreshSyntax(null);
         });
     };
 
@@ -471,7 +488,7 @@
 
         preinstall();
         installMonaco(parent);
-        installMoana(parent, true);
+        installMoana(parent);
     };
 
     const bugRecovery = function() {

@@ -347,13 +347,13 @@
 
     export class Notice {
         level: NoticeLevel;
-        message: string | null;
+        message: string;
         range: TextRange;
 
-        constructor(level: NoticeLevel, range: TextRange, message?: string | null) {
+        constructor(level: NoticeLevel, range: TextRange, message: string) {
             this.level = level;
             this.range = range;
-            this.message = message || null;
+            this.message = message;
         }
     }
 
@@ -576,6 +576,33 @@
             }
 
             let result = this.parseStyleArguments(tag, Def.styleArgument);
+            let usingSrc: ArgRoute | null = null;
+            let usingPfw: ArgRoute | null = null;
+            for (let i = 0; i < result.routes.length; i++) {
+                if (result.routes[i].ruleName === "src") {
+                    usingSrc = result.routes[i];
+                }
+
+                if (result.routes[i].ruleName === "pfw") {
+                    usingPfw = result.routes[i];
+                }
+            }
+
+            if (usingSrc) {
+                if (tag.children.length > 0) {
+                    const msg = Translation.constraintStyleSrcNoChild();
+                    const notice = new Notice(NoticeLevel.Warning, usingSrc.keyRange, msg);
+                    result.notices.push(notice);
+                }
+            }
+
+            if (usingPfw) {
+                if (!usingSrc) {
+                    const msg = Translation.constraintStylePfwNoSrc();
+                    const notice = new Notice(NoticeLevel.Error, usingPfw.keyRange, msg);
+                    result.notices.push(notice);
+                }
+            }
             
             return result.notices;
         }
@@ -818,8 +845,9 @@
 
                     let regex = "^";
                     for (let i = 0; i < argMatch[rule].length; i++) {
-                        regex += `\\s+(${argMatch[rule][i].source})(?=\\s|$)`;
+                        regex += `\\s+(${argMatch[rule][i].source})`;
                     }
+                    regex += "(?=\\s|$)";
 
                     let matcher = new RegExp(regex);
                     let match = args.match(matcher);
@@ -905,7 +933,7 @@
 
         static caseSensitiveTags: string[] = [...Def.atomTags, "customachieve", "omit", "style"];
 
-        static tagRegex: RegExp = /\[(\/?)(\w+)(-?\d+|(?=[\s=])[^\]]{0,100}|)\]/g;
+        static tagRegex: RegExp = /\[(\/?)(\w+)(-?\d+|(?=[\s=])[^\]]{0,255}|)\]/g;
 
         static tagNormalize(name: string): string {
             var normalized = name.toLowerCase();
@@ -951,16 +979,16 @@
                 p: [/\d+(?:\.\d+)?/],
             },
             margin: {
-                p4: [/auto|\d+(?:\.\d+)?/, /auto|\d+(?:\.\d+)?/, /auto|\d+(?:\.\d+)?/, /auto|\d+(?:\.\d+)?/],
-                p3: [/auto|\d+(?:\.\d+)?/, /auto|\d+(?:\.\d+)?/, /auto|\d+(?:\.\d+)?/],
-                p2: [/auto|\d+(?:\.\d+)?/, /auto|\d+(?:\.\d+)?/],
-                p1: [/auto|\d+(?:\.\d+)?/],
+                p4: [/auto|-?\d+(?:\.\d+)?/, /auto|-?\d+(?:\.\d+)?/, /auto|-?\d+(?:\.\d+)?/, /auto|-?\d+(?:\.\d+)?/],
+                p3: [/auto|-?\d+(?:\.\d+)?/, /auto|-?\d+(?:\.\d+)?/, /auto|-?\d+(?:\.\d+)?/],
+                p2: [/auto|-?\d+(?:\.\d+)?/, /auto|-?\d+(?:\.\d+)?/],
+                p1: [/auto|-?\d+(?:\.\d+)?/],
             },
             padding: {
-                p4: [/auto|\d+(?:\.\d+)?/, /auto|\d+(?:\.\d+)?/, /auto|\d+(?:\.\d+)?/, /auto|\d+(?:\.\d+)?/],
-                p3: [/auto|\d+(?:\.\d+)?/, /auto|\d+(?:\.\d+)?/, /auto|\d+(?:\.\d+)?/],
-                p2: [/auto|\d+(?:\.\d+)?/, /auto|\d+(?:\.\d+)?/],
-                p1: [/auto|\d+(?:\.\d+)?/],
+                p4: [/auto|-?\d+(?:\.\d+)?/, /auto|-?\d+(?:\.\d+)?/, /auto|-?\d+(?:\.\d+)?/, /auto|-?\d+(?:\.\d+)?/],
+                p3: [/auto|-?\d+(?:\.\d+)?/, /auto|-?\d+(?:\.\d+)?/, /auto|-?\d+(?:\.\d+)?/],
+                p2: [/auto|-?\d+(?:\.\d+)?/, /auto|-?\d+(?:\.\d+)?/],
+                p1: [/auto|-?\d+(?:\.\d+)?/],
             },
             clear: {
                 p: [/both/],
@@ -1011,17 +1039,20 @@
                 p: [/#[0-9a-fA-F]{3}(?:[0-9a-fA-F]{3})?/],
             },
             src: {
-                p: [/\.\/mon_\d{6}\/\d+\/[^\]\[]+\.(?:jpg|png|svg)/],
+                src: [/\.\/mon_\d{6}\/\d+\/[^\]\[]+\.(?:jpg|png|svg)/],
             },
             dybg: {
                 p: [new RegExp(
-                    "-?\d+(?:\.\d+)?\%" + ";" +
-                    "-?\d+(?:\.\d+)?\%?" + ";" +
-                    "-?\d+(?:\.\d+)?\%?" + ";" +
-                    "-?\d+(?:\.\d+)?\%?" + ";" +
-                    "-?\d+(?:\.\d+)?\%?" + ";" +
-                    "\.\/mon_\d{6}\/\d+\/[^\]\[]+\.(?:png|jpg|jpeg|bmp|svg|gif)"
+                    "-?\\d+(?:\\.\\d+)?\\%" + ";" +
+                    "-?\\d+(?:\\.\\d+)?\\%?" + ";" +
+                    "-?\\d+(?:\\.\\d+)?\\%?" + ";" +
+                    "-?\\d+(?:\\.\\d+)?\\%?" + ";" +
+                    "-?\\d+(?:\\.\\d+)?\\%?" + ";" +
+                    "\\.\\/mon_\\d{6}\\/\\d+\\/[^\\]\\[]+\\.(?:png|jpg|jpeg|bmp|svg|gif)"
                 )]
+            },
+            parentfitwidth: {
+                pfw: []
             }
         };
 
@@ -1121,12 +1152,14 @@
 
         static constraintColorOptionRange = (name: string) => `颜色 ${name} 不受论坛支持`;
         static constraintEntityCodeRange = (name: string) => `转义序列 ${name} 不受论坛支持`;
-        static constraintFixsizeContainer = () => `标签 Fixsize 仅可在 Collapse 或 Randomblock 区域内生效`;
+        static constraintFixsizeContainer = () => `标签 fixsize 仅可在 collapse 或 randomblock 区域内生效`;
         static constraintFontOptionRange = (name: string) => `字体 ${name} 不受论坛支持`;
         static constraintInnerTooLong = (name: string, length: number) => `标签 ${name} 现有内文过长，最大允许 ${length} 个经转义的字符`;
-        static constraintRequireFixsize = (name: string) => `标签 ${name} 仅可在 Fixsize 区域内生效`;
+        static constraintRequireFixsize = (name: string) => `标签 ${name} 仅可在 fixsize 区域内生效`;
         static constraintSizeOptionRange = (name: number) => `缩放 ${name}% 不受论坛支持`;
-        static constraintSymbolOutOfRange = (name: string) => `符号名 ${name} 无法作为 Symbol 标签参数`;
+        static constraintStyleSrcNoChild = () => `标签 style 使用 src 参数时不应包括其他标签`;
+        static constraintStylePfwNoSrc = () => `标签 style 的 parentfitwidth 参数仅可与 src 参数同时使用`;
+        static constraintSymbolOutOfRange = (name: string) => `符号名 ${name} 无法作为 symbol 标签参数`;
 
         static pairingInterlacing = (name: string) => `标签 ${name} 的嵌套顺序存在错误`;
         static pairingMismatched = (name: string) => `标签 ${name} 无法在当前作用域内配对`;
@@ -1134,15 +1167,15 @@
         static tagUnrecognized = (name: string) => `未知的标签 ${name}`;
 
         static bugAbstractSuspecious = (name: string) => `标签 ${name} 的提纲部分可能无法正确支持显示方括号与换行符`;
-        static bugBrInCode = () => `标签 Code 作用区域内的 Br 换行符仍将生效`;
-        static bugChartradarFormat = () => `标签 Chartradar 中属性数值对数量错误可能引起论坛网页严重错误`;
-        static bugCryptNotWorking = () => `标签 Crypt 如未使用修复脚本将无法正确解密`;
+        static bugBrInCode = () => `标签 code 作用区域内的 br 换行符仍将生效`;
+        static bugChartradarFormat = () => `标签 chartradar 中属性数值对数量错误可能引起论坛网页严重错误`;
+        static bugCryptNotWorking = () => `标签 crypt 如未使用修复脚本将无法正确解密`;
         static bugDeprecated = (name: string) => `标签 ${name} 已不受当前版本的论坛网站支持`;
-        static bugFixsizeBg = () => `标签 Fixsize 中使用单参数背景色设置可能引起论坛网页严重错误`;
-        static bugHeadlineMissingText = () => `标签 Headline 中缺少 Hltxt 标签或其内容可能引起论坛网页严重错误`;
-        static bugLesserNuke = () => `标签 LesserNuke 会在发布时被清除，且有概率为您招来真正的禁言，请三思后行`;
-        static bugMarkdown = () => `检测到 Markdown 模式，该模式下存在多个已知 bug 且不受语法检查器支持`;
+        static bugFixsizeBg = () => `标签 fixsize 中使用单参数背景色设置可能引起论坛网页严重错误`;
+        static bugHeadlineMissingText = () => `标签 headline 中缺少 hltxt 标签或其内容可能引起论坛网页严重错误`;
+        static bugLesserNuke = () => `标签 lessernuke 会在发布时被清除，且有概率为您招来真正的禁言，请三思后行`;
+        static bugMarkdown = () => `检测到 markdown 模式，该模式下存在多个已知 bug 且不受语法检查器支持`;
         static bugNotRecommended = (name: string) => `标签 ${name} 已不推荐使用`;
-        static bugTagInOmit = () => `标签 Omit 作用区域内使用任何标签均将导致全文显示错误`;
+        static bugTagInOmit = () => `标签 omit 作用区域内使用任何标签均将导致全文显示错误`;
     }
 }
