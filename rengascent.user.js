@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         RenGascent NGA
-// @version      2.2.1
+// @version      2.2.2
 // @description  RenGascent 论坛代码编辑器
 // @author       Chigusa0w0
 // @copyright    2021, Chigusa0w0 (https://github.com/Chigusa0w0)
@@ -23,6 +23,10 @@
 // ==/UserScript==
 
 // 版本历史
+// 2.2.2:
+//   + 预览窗口自动响应
+//   + 文本格式快捷键
+//   - 已知 bug: 使用触摸板低速翻页时可能引起整页滚动 (microsoft/monaco-editor#2623)
 // 2.2.1:
 //   + 可视化编辑器兼容性
 // 2.2:
@@ -136,6 +140,10 @@
             onto.addEventListener(event, handler, false);
         }
 
+        // disable conflicting shortcuts
+        onto.editor.addCommand(onto.monaco.KeyMod.CtrlCmd | onto.monaco.KeyCode.KEY_U, function() {});
+        onto.editor.addCommand(onto.monaco.KeyMod.CtrlCmd | onto.monaco.KeyCode.Enter, function() {});
+
         // restore content
         onto.editor.setValue(content);
         backup = content;
@@ -170,7 +178,7 @@
     }
 
     const refreshSyntax = function(e) {
-        //try {
+        try {
             let model = textarea.editor.getModel();
             let syntax = new BBCode.SyntaxChecker(textarea.value);
             let token = syntax.tokenPass();
@@ -185,19 +193,54 @@
             }
 
             textarea.monaco.editor.setModelMarkers(model, "rengascent", markers);
-        //}
-        //catch(e) {
-        //    renderbugfix = true;
-        //}
+        }
+        catch(e) {
+            renderbugfix = true;
+        }
     }
 
     const shortcutKeydown = function(e) {
         let pfn = unsafeWindow.postfunc;
         let cui = unsafeWindow.commonui;
 
-        // ctrl + enter
-        if (e.ctrlKey && e.keyCode === 13) {
-            document.querySelector("table.stdbtn a.uitxt1").click();
+        let propagate = true;
+
+        if (e.ctrlKey && !e.shiftKey) {
+            propagate = false;
+            switch (e.keyCode) {
+                case 13: /* + enter */ document.querySelector("table.stdbtn a.uitxt1").click(); break;
+
+                case 66: /* + b */ unsafeWindow.postfunc.addTag("b"); break;
+                case 68: /* + d */ unsafeWindow.postfunc.addTag("del"); break;
+                case 73: /* + i */ unsafeWindow.postfunc.addTag("i"); break;
+                case 81: /* + q */ unsafeWindow.postfunc.addTag("collapse", "此处填入概要"); break;
+                case 83: /* + s */ break; // we are not real vscode
+                case 85: /* + u */ unsafeWindow.postfunc.addTag("u"); break;
+
+                default: propagate = true; break;
+            }
+        }
+
+        else if (e.ctrlKey && e.shiftKey) {
+            propagate = false;
+            switch (e.keyCode) {
+                case 54: /* + 6 */ unsafeWindow.postfunc.addTag("sup"); break;
+
+                case 189: /* + - */ unsafeWindow.postfunc.addTag("sub"); break;
+                case 187: /* + = */ unsafeWindow.postfunc.addTag("h"); break;
+
+                case 67: /* + c */ unsafeWindow.postfunc.addTag("color", "此处填入颜色"); break;
+                case 71: /* + g */ unsafeWindow.postfunc.addTag("align", "此处填入对齐"); break;
+                case 81: /* + q */ unsafeWindow.postfunc.addTag("quote"); break;
+                case 82: /* + r */ unsafeWindow.postfunc.addTag("randomblock"); break;
+                case 83: /* + s */ unsafeWindow.postfunc.addTag("size", "此处填入尺寸"); break;
+                case 85: /* + u */ unsafeWindow.postfunc.addTag("url", "此处填入链接"); break;
+
+                default: propagate = true; break;
+            }
+        }
+
+        if (!propagate) {
             cui.cancelEvent(e);
         }
     };
@@ -239,8 +282,7 @@
             return commonui.cancelEvent(e);
         }
 
-        commonui.cancelBubble(e);
-        return commonui.cancelEvent(e);
+        return;
     };
 
     const adaptEvents = function(onto) {

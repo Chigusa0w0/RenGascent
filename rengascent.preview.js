@@ -123,6 +123,14 @@ const previewRoutines = function(env, doc) {
         postContent.firstChild.style.display = "none";
     };
 
+    env.resizeParentDebounce = null;
+    env.resizeParent = function() {
+        clearTimeout(env.resizeParentDebounce);
+        env.resizeParentDebounce = setTimeout(function() {
+            env.viewarea.height = env.viewarea.contentWindow.document.body.scrollHeight + 14;
+        }, 100);
+    };
+
     env.render = function(data) {
         env.cleanup();
 
@@ -135,7 +143,7 @@ const previewRoutines = function(env, doc) {
         env.rewriteLink();
         env.removeUnused();
 
-        env.viewarea.height = env.viewarea.contentWindow.document.body.scrollHeight + 14;
+        env.resizeParent();
     };
 
     env.vmStart = function(bbcode) {
@@ -387,11 +395,6 @@ const previewData = function(env, doc) {
 };
 
 const previewFinalizer = function(env, doc) {
-    
-    if (typeof(doc) === "undefined") {
-        return;
-    }
-    
     // override copy check
     env.ubbcode.copyChk = function() {};
 
@@ -420,4 +423,11 @@ const previewFinalizer = function(env, doc) {
     // override scroll ban
     env.commonui.crossDomainCall.setCallBack('iframeReadNoScrollInit', function() {});
     env.commonui.crossDomainCall.setCallBack('iframeReadNoScroll', function() {});
+
+    // respond to img/collapse/randomblock
+    const resizeObserver = new ResizeObserver(entries => {
+        env.resizeParent();
+    });
+    resizeObserver.observe(doc.body);
+    env.resizeParent();
 };
