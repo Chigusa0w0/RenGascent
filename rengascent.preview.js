@@ -129,7 +129,9 @@ const previewRoutines = function(env, doc) {
     env.resizeParent = function() {
         clearTimeout(env.resizeParentDebounce);
         env.resizeParentDebounce = setTimeout(function() {
-            env.viewarea.height = env.viewarea.contentWindow.document.body.scrollHeight + 14;
+            let height = env.viewarea.contentWindow.document.body.scrollHeight;
+            let outHeight = height + env.viewarea.heightOffset;
+            env.viewarea.height = outHeight;
         }, 100);
     };
 

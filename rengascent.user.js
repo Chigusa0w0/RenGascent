@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         RenGascent NGA
-// @version      2.2.3
+// @version      2.2.4
 // @description  RenGascent 论坛代码编辑器
 // @author       Chigusa0w0
 // @copyright    2021, Chigusa0w0 (https://github.com/Chigusa0w0)
@@ -17,12 +17,17 @@
 // @grant        GM_getValue
 // @grant        unsafeWindow
 // @require      https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js
-// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@v2.2.3/rengascent.semantic.js
-// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@v2.2.3/rengascent.syntax.js
-// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@v2.2.3/rengascent.preview.js
+// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@v2.2.4/rengascent.semantic.js
+// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@v2.2.4/rengascent.syntax.js
+// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@v2.2.4/rengascent.preview.js
 // ==/UserScript==
 
 // 版本历史
+// 2.2.4:
+//   + 颜色选择浮窗
+//   + dice 快捷键 Ctrl + Shift + D
+//   + 横排模式与分屏支持
+//   + 修复即时预览灾难恢复的 bug
 // 2.2.3:
 //   + 语法提示消息优化
 //   + TamperMonkey 缓存应对
@@ -54,6 +59,9 @@
 
     // 设置 X 毫秒无输入后进行即时预览渲染
     const inputBufferDelay = 200;
+
+    // 设置预览窗口并排模式 true = 横向并列 false = 竖向排列
+    const useSideBySideLayout = false;
 
     var textarea;
     var editarea;
@@ -165,7 +173,8 @@
                 if (viewarea.renderbugfix) {
                     // eighth calamity is there
                     recoveryPreview();
-                    viewarea.renderbugfix = viewarea.vmStart(textarea.value);
+                    viewarea.vmStart(textarea.value);
+                    viewarea.renderbugfix = false; // recursive refreshPreview-installMoana.load
                 }
                 else {
                     // everything is fine
@@ -208,6 +217,10 @@
         document.querySelector("table.stdbtn a.uitxt1").click();
     };
 
+    const doColoring = function() {
+        document.querySelector("button[title='文字颜色']").click();
+    };
+
     const shortcutKeydown = function(e) {
         let pfn = unsafeWindow.postfunc;
         let cui = unsafeWindow.commonui;
@@ -238,8 +251,9 @@
                 case 189: /* + - */ unsafeWindow.postfunc.addTag("sub"); break;
                 case 187: /* + = */ unsafeWindow.postfunc.addTag("h"); break;
 
-                case 67: /* + c */ unsafeWindow.postfunc.addTag("color", "此处填入颜色"); break;
-                case 71: /* + g */ unsafeWindow.postfunc.addTag("align", "此处填入对齐"); break;
+                case 67: /* + c */ doColoring(); break;
+                case 68: /* + d */ unsafeWindow.postfunc.addTag("dice"); break;
+                case 71: /* + g */ unsafeWindow.postfunc.addTag("align", "left/center/right"); break;
                 case 81: /* + q */ unsafeWindow.postfunc.addTag("quote"); break;
                 case 82: /* + r */ unsafeWindow.postfunc.addTag("randomblock"); break;
                 case 83: /* + s */ unsafeWindow.postfunc.addTag("size", "此处填入尺寸"); break;
@@ -358,6 +372,8 @@
         monaco.editor.defineTheme('bbcode', bbcodeTheme);
     };
 
+    // iframe hooks
+
     const monacoPre = function(dom, monaco) {
         enableBBCode(monaco);
     };
@@ -371,17 +387,6 @@
         adaptMonaco(dom, prevtext);
         adaptEvents(dom);
     };
-
-    const moanaRecoverySetup = function() {
-        if (document.getElementById('moanaManualRefresh')) return;
-
-        var container = document.getElementById('post_subject').parentNode;
-        $(container).append('<button id="moanaManualRefresh">重置预览框</button>');
-        var button = document.getElementById('moanaManualRefresh');
-        $(button).click(() => {
-            recoveryPreview();
-        });
-    }
 
     const moanaPre = function(env, doc) {
         previewRoutines(env, doc);
@@ -398,9 +403,43 @@
         previewFinalizer(env, doc);
     };
 
+    // --- dom helper ---
+
+    const moanaSeperate = function() {
+        let hwnd = window.open('/nuke.php','即时预览','directories=no,titlebar=no,toolbar=no,location=no,status=no,menubar=no,scrollbars=no');
+        hwnd.onload = () => {
+            viewarea.remove();
+            hwnd.document.body.style.margin = '0';
+            installMoana($(hwnd.document.body), 2);
+            hwnd.onbeforeunload = function() {
+                if (!isEditor()) return;
+                let parent = $(editarea).parent();
+                let mode = useSideBySideLayout ? 1 : 0;
+                installMoana(parent, mode);
+            }
+        }
+    };
+
+    const moanaRecoverySetup = function() {
+        if (document.getElementById('moanaManualRefresh')) return;
+
+        var container = document.getElementById('post_subject').parentNode;
+        $(container).append('<button id="moanaManualRefresh">重置预览框</button>');
+        $(container).append('<button id="moanaPopupWindow">独立预览框</button>');
+        var refresher = document.getElementById('moanaManualRefresh');
+        $(refresher).click(() => {
+            recoveryPreview();
+        });
+
+        var popup = document.getElementById('moanaPopupWindow');
+        $(popup).click(() => {
+            moanaSeperate();
+        });
+    }
+
     // --- dom worker ---
 
-    const installMonaco = function(parent) {
+    const installMonaco = function(parent, mode) {
         // load monaco in seperate page to avoid conflict
         let iframe = document.createElement('iframe');
         editarea = iframe;
@@ -411,10 +450,19 @@
         iframe.style.borderRadius = '3px';
         iframe.style.boxSizing = 'border-box';
         iframe.style.height = '50em';
+        iframe.style.margin = '0 0 10px';
         iframe.style.minHeight = '10em';
         iframe.style.padding = '0 0 10px';
         iframe.style.resize = 'vertical';
-        iframe.style.width = '100%';
+        switch (mode) {
+            case 0: // vect layout
+                iframe.style.width = '100%';
+                break;
+            case 1: // hori layout
+                iframe.style.width = '50%';
+                parent[0].style.display = 'flex';
+                break;
+        }
         parent.append(iframe);
 
         iframe.addEventListener('load', function (e) {
@@ -429,7 +477,7 @@
         });
     };
 
-    const installMoana = function(parent) {
+    const installMoana = function(parent, mode) {
         // this is also done for moana
         let iframe = document.createElement('iframe');
         viewarea = iframe;
@@ -439,11 +487,28 @@
         iframe.style.border = '1px solid lightgrey';
         iframe.style.borderRadius = '3px';
         iframe.style.boxSizing = 'border-box';
-        iframe.style.margin = '10px 0 0';
-        iframe.style.maxHeight = '50em';
+        iframe.style.margin = '0 0 10px';
         iframe.style.padding = '0 0 10px';
         iframe.style.resize = 'vertical';
-        iframe.style.width = '100%';
+        switch (mode) {
+            case 0: // vect layout
+                iframe.style.maxHeight = '50em';
+                iframe.style.width = '100%';
+                iframe.heightOffset = 14;
+                break;
+            case 1: // hori layout
+                iframe.style.width = '50%';
+                iframe.heightOffset = 30;
+                break;
+            case 2: // popup layout
+                iframe.style.height = '100%';
+                iframe.style.margin = '0';
+                iframe.style.padding = '0';
+                iframe.style.position = 'fixed';
+                iframe.style.width = '100%';
+                iframe.heightOffset = 0;
+                break;
+        }
         iframe.renderbugfix = false;
         parent.append(iframe);
         moanaRecoverySetup();
@@ -486,9 +551,10 @@
         parent.css("display", "block");
         prevarea.remove();
 
+        let mode = useSideBySideLayout ? 1 : 0;
         preinstall();
-        installMonaco(parent);
-        installMoana(parent);
+        installMonaco(parent, mode);
+        installMoana(parent, mode);
     };
 
     const bugRecovery = function() {
