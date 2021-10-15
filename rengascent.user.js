@@ -17,9 +17,9 @@
 // @grant        GM_getValue
 // @grant        unsafeWindow
 // @require      https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js
-// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@v2.2.4/rengascent.semantic.js
-// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@v2.2.4/rengascent.syntax.js
-// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@v2.2.4/rengascent.preview.js
+// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@v2.2.5/rengascent.semantic.js
+// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@v2.2.5/rengascent.syntax.js
+// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@v2.2.5/rengascent.preview.js
 // ==/UserScript==
 
 // 版本历史
