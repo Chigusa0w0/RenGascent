@@ -392,6 +392,7 @@ const previewData = function(env, doc) {
 
     env.__UFIMG = false;
     env.ngaAds = {
+        ignore: function() { return true; },
         bbs_ads32_gen: function() {},
         bbs_ads8_load_new: function() {},
         bbs_ads8_load_new_load: function() {},
