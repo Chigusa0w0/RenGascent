@@ -1,6 +1,6 @@
 // ==UserScript==
 // @name         RenGascent NGA
-// @version      2.2.5
+// @version      2.2.6
 // @description  RenGascent 论坛代码编辑器
 // @author       Chigusa0w0
 // @copyright    2021, Chigusa0w0 (https://github.com/Chigusa0w0)
@@ -17,12 +17,14 @@
 // @grant        GM_getValue
 // @grant        unsafeWindow
 // @require      https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js
-// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@v2.2.5/rengascent.semantic.js
-// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@v2.2.5/rengascent.syntax.js
-// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@v2.2.5/rengascent.preview.js
+// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@v2.2.6/rengascent.semantic.js
+// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@v2.2.6/rengascent.syntax.js
+// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@v2.2.6/rengascent.preview.js
 // ==/UserScript==
 
 // 版本历史
+// 2.2.6:
+//   + 修复换行符兼容性问题
 // 2.2.5:
 //   + 支持从独立预览框返回常规模式
 //   + 预览字体跟随 NGA 显示设置
@@ -56,9 +58,265 @@
     var renderdelay;
 
     // iframe source. keep it simple
-    const monacoEnvironment = '<!DOCTYPE html><html style="height:100%"><head> <base href="https:\/\/cdn.jsdelivr.net\/npm\/monaco-editor@0.26.1\/min\/"> <style>#loading .spinner{margin: 100px auto; width: 50px; height: 40px; text-align: center; font-size: 10px}#loading .spinner>div{background-color: #333; height: 100%; width: 6px; display: inline-block; -webkit-animation: sk-stretchdelay 1.2s infinite ease-in-out; animation: sk-stretchdelay 1.2s infinite ease-in-out}#loading .spinner .rect2{-webkit-animation-delay: -1.1s; animation-delay: -1.1s}#loading .spinner .rect3{-webkit-animation-delay: -1s; animation-delay: -1s}#loading .spinner .rect4{-webkit-animation-delay: -.9s; animation-delay: -.9s}#loading .spinner .rect5{-webkit-animation-delay: -.8s; animation-delay: -.8s}@-webkit-keyframes sk-stretchdelay{0%, 100%, 40%{-webkit-transform: scaleY(.4)}20%{-webkit-transform: scaleY(1)}}@keyframes sk-stretchdelay{0%, 100%, 40%{transform: scaleY(.4); -webkit-transform: scaleY(.4)}20%{transform: scaleY(1); -webkit-transform: scaleY(1)}}<\/style> <link data-name="vs\/editor\/editor.main" rel="stylesheet" href="https:\/\/cdn.jsdelivr.net\/npm\/monaco-editor@0.26.1\/min\/vs\/editor\/editor.main.css"\/> <style type="text\/css"> body{margin: 0; padding: 0; border: 0; overflow: hidden;}<\/style><\/head><body> <div id="loading"> <div class="spinner"> <div class="rect1"><\/div><div class="rect2"><\/div><div class="rect3"><\/div><div class="rect4"><\/div><div class="rect5"><\/div><\/div><\/div><div id="container" style="height:100%;"><\/div><script>var require={paths:{"vs": "https:\/\/cdn.jsdelivr.net\/npm\/monaco-editor@0.26.1\/min\/vs"}, "vs\/nls":{availableLanguages:{"*": "zh-cn"}}}; window.MonacoEnvironment={getWorkerUrl: function (workerId, label){let encoded=[ `self.MonacoEnvironment={`, `baseUrl: "https:\/\/cdn.jsdelivr.net\/npm\/monaco-editor@0.26.1\/min\/"`, `};`, `importScripts("https:\/\/cdn.jsdelivr.net\/npm\/monaco-editor@0.26.1\/min\/vs\/base\/worker\/workerMain.js");`,].join(" "); return `data:text\/javascript;charset=utf-8,${encodeURIComponent(encoded)}`;}}; <\/script> <script src="https:\/\/cdn.jsdelivr.net\/npm\/monaco-editor@0.26.1\/min\/vs\/loader.js"><\/script> <script type="text\/javascript">var geval=eval; require(["require", "vs\/editor\/editor.main"], function (require){"use strict"; var loading=document.getElementById("loading"); loading.parentNode.removeChild(loading); document.body.style.height="100%"; var container=document.getElementById("container"); if (window.preInit){window.preInit(container, monaco);}var editor=monaco.editor.create(container,{theme: "bbcode", value: "正在加载内容...", language: "bbcode", readOnly: false, scrollBeyondLastLine: false, automaticLayout: true, colorDecorators: true, renderControlCharacters: true, renderValidationDecorations: "on", autoClosingBrackets: "always", autoIndent: "keep", autoSurround: "brackets", copyWithSyntaxHighlighting: false, detectIndentation: false, insertSpaces: true, renderWhitespace: "all", scrollbar:{alwaysConsumeMouseWheel: false}, wordWrap: "on"}); if (window.postInit){window.postInit(container, editor, monaco);}}); <\/script><\/body><\/html>';
-    const moanaEnvironment = '<!DOCTYPE html><html> <head> <meta http-equiv="Content-Type" content="text\/html"> <meta name="viewport" content="width=device-width, initial-scale=1"> <meta charset="gbk"> <title id="title">MoanaVM<\/title> <script>if (window.preload) window.preload(window, document); <\/script> <script type="text\/javascript">var __CURRENT_UID=0, __CURRENT_AVATAR="", __CURRENT_UNAME="#GUEST#", __CACHE_PATH=".\/data\/bbscache", __MISC_COOKIE_NAME="bbsmisccookies", __CHARSET="GBK", __CURRENT_FID=0, __CURRENT_F_BIT=0, __CURRENT_TID=0, __CURRENT_STID=0, __SELECTED_FORUM=0; <\/script> <script>if (window.load) window.load(window, document); <\/script> <script>var loaderReadCallback=function(){commonui.aE(window, "bodyInit", function(){_LOADERREAD.init()})}; __SCRIPTS.syncLoad("lib", "dsList", "combine", "dsCommon", "md5", "common", "forum", "admin", "loaderRead"); <\/script> <script>__COOKIE.init(__CKDOMAIN, "\/", "bbsmisccookies"); __SETTING.init(0); __SCRIPTS.syncLoad("commonSpec", "bbscode", "bbscodeSpec", "mainMenu", "customBg", "post"); <\/script> <script>__SCRIPTS.syncLoad("read", "armory", "quoteTo"); <\/script> <style>body{background: unset !important;}#m_posts{border: unset !important; box-shadow: unset !important; border-radius: unset !important; padding-bottom: unset !important; border-bottom: unset !important;}.module_wrap{margin: unset !important;}.textfield{max-width: 90% !important;}<\/style> <\/head> <body> <script>if (window.setup) window.setup(window, document); <\/script> <div class="clear minWidthSpacer" id="minWidthSpacer"><\/div><div id="mmc"> <div id="mc"> <div id="m_posts" class="module_wrap"> <div class="w100" id="m_posts_c"> <table class="forumbox postbox" cellspacing="1px"> <tr id="post1strow0" class="postrow row2"> <td class="c1" style="vertical-align:top; text-align:center; display: none;"> <span id="posterinfo0" class="posterinfo"> <a href="" id="postauthor0" class="author b"><\/a> <\/span> <\/td><td class="c2" style="vertical-align:top" id="postcontainer0"> <a name="l0"><\/a> <div class="postBtnPos" id="postBtnPos0"><\/div><div class="postInfo" id="postInfo0"> <span id="postdate0" title="reply time"><\/span> <\/div><span id="postcontentandsubject0"> <h3 id="postsubject0"><\/h3> <p id="postcontent0" class="postcontent ubbcode"> Loading MoanaVM <\/p><\/span> <\/td><\/tr><\/table> <\/div><\/div><\/div id="mc"> <\/div id="mmc"> <script>if (window.finalize) window.finalize(window, document); <\/script> <\/body><\/html>';
+    const monacoEnvironment = `
+        <!DOCTYPE html>
+        <html style="height:100%">
 
+        <head>
+            <base href="https://cdn.jsdelivr.net/npm/monaco-editor@0.31.1/min/">
+            <style>
+                #loading .spinner {
+                    margin: 100px auto;
+                    width: 50px;
+                    height: 40px;
+                    text-align: center;
+                    font-size: 10px
+                }
+
+                #loading .spinner>div {
+                    background-color: #333;
+                    height: 100%;
+                    width: 6px;
+                    display: inline-block;
+                    -webkit-animation: sk-stretchdelay 1.2s infinite ease-in-out;
+                    animation: sk-stretchdelay 1.2s infinite ease-in-out
+                }
+
+                #loading .spinner .rect2 {
+                    -webkit-animation-delay: -1.1s;
+                    animation-delay: -1.1s
+                }
+
+                #loading .spinner .rect3 {
+                    -webkit-animation-delay: -1s;
+                    animation-delay: -1s
+                }
+
+                #loading .spinner .rect4 {
+                    -webkit-animation-delay: -.9s;
+                    animation-delay: -.9s
+                }
+
+                #loading .spinner .rect5 {
+                    -webkit-animation-delay: -.8s;
+                    animation-delay: -.8s
+                }
+
+                @-webkit-keyframes sk-stretchdelay {
+
+                    0%,
+                    100%,
+                    40% {
+                        -webkit-transform: scaleY(.4)
+                    }
+
+                    20% {
+                        -webkit-transform: scaleY(1)
+                    }
+                }
+
+                @keyframes sk-stretchdelay {
+
+                    0%,
+                    100%,
+                    40% {
+                        transform: scaleY(.4);
+                        -webkit-transform: scaleY(.4)
+                    }
+
+                    20% {
+                        transform: scaleY(1);
+                        -webkit-transform: scaleY(1)
+                    }
+                }
+            </style>
+            <link data-name="vs/editor/editor.main" rel="stylesheet"
+                href="https://cdn.jsdelivr.net/npm/monaco-editor@0.31.1/min/vs/editor/editor.main.css" />
+            <style type="text/css">
+                body {
+                    margin: 0;
+                    padding: 0;
+                    border: 0;
+                    overflow: hidden;
+                }
+            </style>
+        </head>
+
+        <body>
+            <div id="loading">
+                <div class="spinner">
+                    <div class="rect1"></div>
+                    <div class="rect2"></div>
+                    <div class="rect3"></div>
+                    <div class="rect4"></div>
+                    <div class="rect5"></div>
+                </div>
+            </div>
+            <div id="container" style="height:100%;"></div>
+            <script>
+                var require = {
+                    paths: {
+                        "vs": "https://cdn.jsdelivr.net/npm/monaco-editor@0.31.1/min/vs"
+                    },
+                    "vs/nls": {
+                        availableLanguages: {
+                            "*": "zh-cn"
+                        }
+                    }
+                };
+                window.MonacoEnvironment = {
+                    getWorkerUrl: function (workerId, label) {
+                        let encoded = [\`self.MonacoEnvironment={\`,
+                            \`baseUrl: "https://cdn.jsdelivr.net/npm/monaco-editor@0.31.1/min/"\`, \`};\`,
+                            \`importScripts("https://cdn.jsdelivr.net/npm/monaco-editor@0.31.1/min/vs/base/worker/workerMain.js");\`,
+                        ].join(" ");
+                        return \`data:text/javascript;charset=utf-8,\${encodeURIComponent(encoded)}\`;
+                    }
+                };
+            </script>
+            <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.31.1/min/vs/loader.js"></script>
+            <script type="text/javascript">
+                var geval = eval;
+                require(["require", "vs/editor/editor.main"], function (require) {
+                    "use strict";
+                    var loading = document.getElementById("loading");
+                    loading.parentNode.removeChild(loading);
+                    document.body.style.height = "100%";
+                    var container = document.getElementById("container");
+                    if (window.preInit) {
+                        window.preInit(container, monaco);
+                    }
+                    var editor = monaco.editor.create(container, {
+                        theme: "bbcode",
+                        value: "正在加载内容...",
+                        language: "bbcode",
+                        readOnly: false,
+                        scrollBeyondLastLine: false,
+                        automaticLayout: true,
+                        colorDecorators: true,
+                        renderControlCharacters: true,
+                        renderValidationDecorations: "on",
+                        autoClosingBrackets: "always",
+                        autoIndent: "keep",
+                        autoSurround: "brackets",
+                        copyWithSyntaxHighlighting: false,
+                        detectIndentation: false,
+                        insertSpaces: true,
+                        renderWhitespace: "all",
+                        scrollbar: {
+                            alwaysConsumeMouseWheel: false
+                        },
+                        wordWrap: "on"
+                    });
+                    if (window.postInit) {
+                        window.postInit(container, editor, monaco);
+                    }
+                });
+            </script>
+        </body>
+
+        </html>`;
+    const moanaEnvironment = `
+        <!DOCTYPE html>
+        <html>
+
+        <head>
+            <meta http-equiv="Content-Type" content="text/html">
+            <meta name="viewport" content="width=device-width, initial-scale=1">
+            <meta charset="gbk">
+            <title id="title">MoanaVM</title>
+            <script>
+                if (window.preload) window.preload(window, document);
+            </script>
+            <script type="text/javascript">
+                var __CURRENT_UID = 0,
+                    __CURRENT_AVATAR = "",
+                    __CURRENT_UNAME = "#GUEST#",
+                    __CACHE_PATH = "./data/bbscache",
+                    __MISC_COOKIE_NAME = "bbsmisccookies",
+                    __CHARSET = "GBK",
+                    __CURRENT_FID = 0,
+                    __CURRENT_F_BIT = 0,
+                    __CURRENT_TID = 0,
+                    __CURRENT_STID = 0,
+                    __SELECTED_FORUM = 0;
+            </script>
+            <script>
+                if (window.load) window.load(window, document);
+            </script>
+            <script>
+                var loaderReadCallback = function () {
+                    commonui.aE(window, "bodyInit", function () {
+                        _LOADERREAD.init()
+                    })
+                };
+                __SCRIPTS.syncLoad("lib", "dsList", "combine", "dsCommon", "md5", "common", "forum", "admin", "loaderRead");
+            </script>
+            <script>
+                __COOKIE.init(__CKDOMAIN, "/", "bbsmisccookies");
+                __SETTING.init(0);
+                __SCRIPTS.syncLoad("commonSpec", "bbscode", "bbscodeSpec", "mainMenu", "customBg", "post");
+            </script>
+            <script>
+                __SCRIPTS.syncLoad("read", "armory", "quoteTo");
+            </script>
+            <style>
+                body {
+                    background: unset !important;
+                }
+
+                #m_posts {
+                    border: unset !important;
+                    box-shadow: unset !important;
+                    border-radius: unset !important;
+                    padding-bottom: unset !important;
+                    border-bottom: unset !important;
+                }
+
+                .module_wrap {
+                    margin: unset !important;
+                }
+
+                .textfield {
+                    max-width: 90% !important;
+                }
+            </style>
+        </head>
+
+        <body>
+            <script>
+                if (window.setup) window.setup(window, document);
+            </script>
+            <div class="clear minWidthSpacer" id="minWidthSpacer"></div>
+            <div id="mmc">
+                <div id="mc">
+                    <div id="m_posts" class="module_wrap">
+                        <div class="w100" id="m_posts_c">
+                            <table class="forumbox postbox" cellspacing="1px">
+                                <tr id="post1strow0" class="postrow row2">
+                                    <td class="c1" style="vertical-align:top; text-align:center; display: none;"> <span
+                                            id="posterinfo0" class="posterinfo"> <a href="" id="postauthor0"
+                                                class="author b"></a> </span> </td>
+                                    <td class="c2" style="vertical-align:top" id="postcontainer0"> <a name="l0"></a>
+                                        <div class="postBtnPos" id="postBtnPos0"></div>
+                                        <div class="postInfo" id="postInfo0"> <span id="postdate0" title="reply time"></span>
+                                        </div><span id="postcontentandsubject0">
+                                            <h3 id="postsubject0"></h3>
+                                            <p id="postcontent0" class="postcontent ubbcode"> Loading MoanaVM </p>
+                                        </span>
+                                    </td>
+                                </tr>
+                            </table>
+                        </div>
+                    </div>
+                </div id="mc">
+            </div id="mmc">
+            <script>
+                if (window.finalize) window.finalize(window, document);
+            </script>
+        </body>
+
+        </html>`;
     // --- compatibility ---
 
     const adaptMonaco = function(onto, content) {
@@ -72,7 +330,7 @@
             set: function(value) {
                 var currentPosition = onto.editor.getPosition();
                 onto.editor.pushUndoStop();
-                onto.editor.executeEdits('rengascent', [{ identifier: 'insert', range: posToRange(1, 1, 10000, 1), text: value, forceMoveMarkers: false }]);
+                onto.editor.executeEdits('rengascent', [{ identifier: 'insert', range: posToRange(1, 1, 2147483647, 1), text: value, forceMoveMarkers: false }]);
                 onto.editor.setSelection(posToRange(0, 0, 0, 0));
                 onto.editor.setPosition(currentPosition);
             }
@@ -137,8 +395,11 @@
         onto.editor.addCommand(onto.monaco.KeyMod.CtrlCmd | onto.monaco.KeyCode.KEY_U, function() {});
         onto.editor.addCommand(onto.monaco.KeyMod.CtrlCmd | onto.monaco.KeyCode.Enter, function() {});
 
+        // set eol to lf
+        onto.editor.getModel().setEOL(0);
+
         // restore content
-        onto.editor.setValue(content);
+        onto.editor.executeEdits('rengascent', [{ identifier: 'insert', range: posToRange(1, 1, 2147483647, 1), text: content, forceMoveMarkers: false }]);
         backup = content;
         refreshPreview(null);
         refreshSyntax(null);
