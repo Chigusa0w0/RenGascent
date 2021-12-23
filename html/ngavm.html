@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html>
+
+<head>
+    <!-- usage: call vmStart(data) with olympus exchange format -->
+    <meta http-equiv="Content-Type" content="text/html">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="referrer" content="never">
+    <title id="title">正在加载 MoanaVM</title>
+    <script src="../js/moana.js"></script>
+    <script type="text/javascript">
+        var __CURRENT_UID = 0,
+            __CURRENT_AVATAR = "",
+            __CURRENT_UNAME = "#GUEST#",
+            __CACHE_PATH = "./data/bbscache",
+            __MISC_COOKIE_NAME = "bbsmisccookies",
+            __CHARSET = "GBK",
+            __CURRENT_FID = 0,
+            __CURRENT_F_BIT = 0,
+            __CURRENT_TID = 0,
+            __CURRENT_STID = 0,
+            __SELECTED_FORUM = 0;
+    </script>
+    <script>
+        rgMoana.Moana.injectBeforeHead(window, document);
+    </script>
+    <script>
+        // loader callbacks
+        var loaderReadCallback = function () {
+            commonui.aE(window, "bodyInit", function () {
+                _LOADERREAD.init()
+            })
+        };
+
+        // phase 1
+        __SCRIPTS.syncLoad("lib", "dsList", "combine", "dsCommon", "md5", "common", "forum", "admin", "loaderRead",
+            loaderReadCallback);
+    </script>
+    <script>
+        // phase 1 bootstrap
+        __COOKIE.init(__CKDOMAIN, "/", "bbsmisccookies");
+        __SETTING.init(0);
+
+        // phase 2
+        __SCRIPTS.syncLoad("commonSpec", "bbscode", "bbscodeSpec", "mainMenu", "customBg", "post");
+    </script>
+    <script>
+        // phase 3
+        __SCRIPTS.syncLoad("read", "armory", "quoteTo");
+    </script>
+    <style>
+        body {
+            /* font-size: 14px !important; */
+            background: unset !important;
+        }
+
+        #m_posts {
+            border: unset !important;
+            box-shadow: unset !important;
+            border-radius: unset !important;
+            padding-bottom: unset !important;
+            border-bottom: unset !important;
+        }
+
+        .module_wrap {
+            margin: unset !important;
+        }
+    </style>
+    <script>
+        rgMoana.Moana.injectAfterHead(window, document);
+    </script>
+</head>
+
+<body>
+    <script>
+        rgMoana.Moana.injectBeforeBody(window, document);
+    </script>
+    <div class="clear minWidthSpacer" id="minWidthSpacer"></div>
+    <div id="mmc">
+        <div id="mc">
+            <div id="m_posts" class="module_wrap">
+                <div class="w100" id="m_posts_c">
+                    <table class="forumbox postbox" cellspacing="1px">
+                        <tr id="post1strow0" class="postrow row2">
+                            <td class="c1" style="vertical-align:top;text-align:center">
+                                <span id="posterinfo0" class="posterinfo">
+                                    <a href="" id="postauthor0" class="author b"></a>
+                                </span>
+                            </td>
+                            <td class="c2" style="vertical-align:top" id="postcontainer0">
+                                <a name="l0"></a>
+                                <div class="postBtnPos" id="postBtnPos0"></div>
+                                <div class="postInfo" id="postInfo0">
+                                    <span id="postdate0" title="reply time"></span>
+                                </div>
+                                <span id="postcontentandsubject0">
+                                    <!--<h3 id="postsubject0"></h3>
+                                    <br />-->
+                                    <p id="postcontent0" class="postcontent ubbcode">
+                                        MoanaVM 加载中
+                                    </p>
+                                    <br />
+                                </span>
+                                <!--<h4 class="silver subtitle">改动</h4>
+                                <span id="alertc0"></span>
+                                <br class="clear" />
+                                <div class="clear"></div>
+                                <div id="postsign0" class="x"></div>-->
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+        </div>
+    </div>
+    <script>
+        rgMoana.Moana.injectAfterBody(window, document);
+    </script>
+</body>
+
+</html>

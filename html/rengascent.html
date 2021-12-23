@@ -1,0 +1,76 @@
+<!DOCTYPE html>
+<html style="height:100%">
+
+<head>  
+    <link rel="stylesheet" href="../css/rengascent.css" />
+    <link data-name="vs/editor/editor.main" rel="stylesheet"
+        href="https://cdn.jsdelivr.net/npm/monaco-editor@0.31.1/min/vs/editor/editor.main.css" />
+</head>
+
+<body>
+    <div id="loading">
+        <div class="spinner">
+            <div class="rect1"></div>
+            <div class="rect2"></div>
+            <div class="rect3"></div>
+            <div class="rect4"></div>
+            <div class="rect5"></div>
+        </div>
+    </div>
+
+    <div class="main container">
+        <div class="function-window monaco-view">
+            <div id="monaco-editor" style="height:100%;"></div>
+            <div class="resize-handle"></div>
+        </div>
+        <div class="resizer" data-direction="vertical"></div>
+        <div class="function-window moana-view">
+            <div id="moana-viewer" style="height:100%;"></div>
+            <div class="resize-handle"></div>
+        </div>
+    </div>
+
+    <script src="../js/rengascent.preload.js"></script>
+    <script src="../js/rengascent.visual.js"></script>
+    <script src="../js/rengascent.js"></script>
+
+    <script>
+        initResizable();
+    </script>
+    
+    <script>
+        var require = {
+            paths: {
+                "vs": "https://cdn.jsdelivr.net/npm/monaco-editor@0.31.1/min/vs"
+            },
+            "vs/nls": {
+                availableLanguages: {
+                    "*": "zh-cn"
+                }
+            }
+        };
+        window.MonacoEnvironment = {
+            getWorkerUrl: function (workerId, label) {
+                let encoded = [`self.MonacoEnvironment={`,
+                    `baseUrl: "https://cdn.jsdelivr.net/npm/monaco-editor@0.31.1/min/"`, `};`,
+                    `importScripts("https://cdn.jsdelivr.net/npm/monaco-editor@0.31.1/min/vs/base/worker/workerMain.js");`,
+                ].join(" ");
+                return `data:text/javascript;charset=utf-8,${encodeURIComponent(encoded)}`;
+            }
+        };
+    </script>
+    <script src="https://cdn.jsdelivr.net/npm/monaco-editor@0.31.1/min/vs/loader.js"></script>
+    <script type="text/javascript">
+        var geval = eval;
+        require(["require", "vs/editor/editor.main"], function (require) {
+            "use strict";
+            var loading = document.getElementById("loading");
+            loading.parentNode.removeChild(loading);
+            document.body.style.height = "100%";
+            
+            rgRengascent.Rengascent.create("monaco-editor", "moana-viewer", "");
+        });
+    </script>
+</body>
+
+</html>

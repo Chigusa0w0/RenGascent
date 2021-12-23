@@ -1,44 +1,5 @@
-// ==UserScript==
-// @name         RenGascent NGA
-// @version      2.2.6
-// @description  RenGascent 论坛代码编辑器
-// @author       Chigusa0w0
-// @copyright    2021, Chigusa0w0 (https://github.com/Chigusa0w0)
-// @license      MIT
-// @match        *://bbs.nga.cn/post.php*
-// @match        *://ngabbs.com/post.php*
-// @match        *://nga.178.com/post.php*
-// @run-at       document-end
-// @updateURL    https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@master/rengascent.user.js
-// @downloadURL  https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@master/rengascent.user.js
-// @supportURL   https://github.com/Chigusa0w0/RenGascent/issues
-// @homepage     https://github.com/Chigusa0w0/RenGascent
-// @grant        GM_setValue
-// @grant        GM_getValue
 // @grant        unsafeWindow
 // @require      https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js
-// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@v2.2.6/rengascent.semantic.js
-// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@v2.2.6/rengascent.syntax.js
-// @require      https://cdn.jsdelivr.net/gh/Chigusa0w0/RenGascent@v2.2.6/rengascent.preview.js
-// ==/UserScript==
-
-// 版本历史
-// 2.2.6:
-//   + 修复换行符兼容性问题
-// 2.2.5:
-//   + 支持从独立预览框返回常规模式
-//   + 预览字体跟随 NGA 显示设置
-//   + 跟随论坛最新改动
-// 2.2.4:
-//   + 颜色选择浮窗
-//   + dice 快捷键 Ctrl + Shift + D
-//   + 横排模式与分屏支持
-//   + 修复即时预览灾难恢复的 bug
-// 2.2.3:
-//   + 语法提示消息优化
-//   + TamperMonkey 缓存应对
-//   + 修复语法提示中若干罕见 bug
-//   + 修复即时预览灾难恢复的 bug
 
 (function() {
     'use strict';
@@ -578,74 +539,6 @@
                 refreshSyntax(e);
             }, inputBufferDelay);
         });
-    };
-
-    // --- language support ---
-
-    const convertToMarker = function(notice) {
-        let model = textarea.editor.getModel();
-        let startIdx = notice.range.index;
-        let endIdx = startIdx + notice.range.length;
-        let startPos = model.getPositionAt(startIdx);
-        let endPos = model.getPositionAt(endIdx);
-
-        let level = 0;
-        switch (notice.level) {
-            case 3: level = 8; break;
-            case 2: level = 4; break;
-            case 1: level = 2; break;
-            case 0: level = 1; break;
-        }
-
-        let marker = {
-            startLineNumber: startPos.lineNumber,
-            startColumn: startPos.column,
-            endLineNumber: endPos.lineNumber2,
-            endColumn: endPos.column,
-            message: notice.message,
-            severity: level
-        }
-
-        return marker;
-    }
-
-    const enableBBCode = function(monaco) {
-        monaco.languages.register({ id: 'bbcode' });
-        monaco.languages.setMonarchTokensProvider('bbcode', bbcodeTokenizer);
-        monaco.languages.setLanguageConfiguration('bbcode', bbcodeLang);
-        monaco.languages.registerLinkProvider({ language: 'bbcode', exclusive: true }, bbcodeLink);
-        monaco.editor.defineTheme('bbcode', bbcodeTheme);
-    };
-
-    // iframe hooks
-
-    const monacoPre = function(dom, monaco) {
-        enableBBCode(monaco);
-    };
-
-    const monacoPost = function(dom, editor, monaco) {
-        dom.editor = editor;
-        dom.monaco = monaco;
-
-        textarea = dom;
-
-        adaptMonaco(dom, prevtext);
-        adaptEvents(dom);
-    };
-
-    const moanaPre = function(env, doc) {
-        previewRoutines(env, doc);
-    };
-
-    const moanaLoad = function(env, doc) {
-        previewData(env, doc);
-    };
-
-    const moanaSetup = function(env, doc) {
-    };
-
-    const moanaPost = function(env, doc) {
-        previewFinalizer(env, doc);
     };
 
     // --- dom helper ---

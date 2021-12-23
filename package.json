@@ -1,0 +1,21 @@
+{
+  "name": "rengascent",
+  "version": "3.0.0",
+  "description": "RenGascent NgaCode Editor",
+  "author": "Chigusa0w0",
+  "license": "MIT",
+  "dependencies": {
+    "browserify": "^17.0.0",
+    "monaco-editor": "^0.31.1"
+  },
+  "scripts": {
+    "browserify-monaco": "browserify ./out/monaco.js --standalone rgMonaco > ./js/monaco.js",
+    "browserify-moana": "browserify ./out/moana.js --standalone rgMoana > ./js/moana.js",
+    "browserify-rengascent": "browserify ./out/rengascent.js --standalone rgRengascent > ./js/rengascent.js",
+    "browserify-all": "npm run browserify-monaco && npm run browserify-moana && npm run browserify-rengascent",
+    "copy-preload": "powershell cp ts/rengascent.preload.js js/rengascent.preload.js",
+    "copy-visual": "powershell cp ts/rengascent.visual.js js/rengascent.visual.js",
+    "copy-all": "npm run copy-preload && npm run copy-visual",
+    "build": "tsc && npm run browserify-all && npm run copy-all"
+  }
+}

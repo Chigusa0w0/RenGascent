@@ -1,0 +1,1 @@
+﻿export const previewData: (env: Window, doc: Document) => void;

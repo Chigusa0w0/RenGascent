@@ -1,25 +1,24 @@
 ﻿{
-  "compilerOptions": {
-    "allowJs": false,
-    "alwaysStrict": true,
-    "esModuleInterop": true,
-    "lib": [ "ES2015" ],
-    "module": "CommonJS",
-    "moduleResolution": "node",
-    "noFallthroughCasesInSwitch": true,
-    "noImplicitAny": true,
-    "noImplicitOverride": true,
-    "noImplicitReturns": true,
-    "noImplicitThis": true,
-    "noPropertyAccessFromIndexSignature": true,
-    "outDir": ".",
-    "preserveConstEnums": true,
-    "removeComments": true,
-    "sourceMap": true,
-    "strict": true,
-    "target": "ES5",
-  },
-  "files": [
-    "rengascent.syntax.ts"
-  ]
+    "compilerOptions": {
+        "allowJs": false,
+        "alwaysStrict": true,
+        "esModuleInterop": true,
+        "lib": [ "ES2016", "DOM" ],
+        "module": "CommonJS",
+        "moduleResolution": "node",
+        "noFallthroughCasesInSwitch": true,
+        "noImplicitAny": true,
+        "noImplicitOverride": true,
+        "noImplicitReturns": true,
+        "noImplicitThis": true,
+        "noPropertyAccessFromIndexSignature": true,
+        "outDir": "./out/",
+        "preserveConstEnums": true,
+        "removeComments": true,
+        "sourceMap": true,
+        "strict": true,
+        "target": "ES5",
+    },
+    "include": ["ts/**/*"],
+    "exclude": [ "node_modules", "**/*.spec.ts" ]
 }
