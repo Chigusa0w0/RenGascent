@@ -1,11 +1,11 @@
 /* viewport */
 
 body {
-    margin: 0;
-    padding: 0;
     border: 0;
-    overflow: hidden;
     font-size: 12px;
+    margin: 0;
+    overflow: hidden;
+    padding: 0;
 }
 
 .main {
@@ -26,7 +26,7 @@ body {
 
 .monaco-view {
     background: rgb(255, 252, 238);
-    height: 50%;
+    height: 40%;
     min-height: 10em;
     padding: 0px 0px 10px;
     resize: vertical;
@@ -74,19 +74,26 @@ body {
 
 /* animation */
 
+#loading {
+    height: 100%;
+    width: 100%;
+}
+
 #loading .spinner {
-    margin: 100px auto;
-    width: 50px;
     height: 40px;
+    font-size: 10px;
+    position: absolute;
     text-align: center;
-    font-size: 10px
+    top: 25%;
+    width: 100%;
 }
 
 #loading .spinner>div {
     background-color: #333;
+    display: inline-block;
     height: 100%;
     width: 6px;
-    display: inline-block;
+    
     -webkit-animation: sk-stretchdelay 1.2s infinite ease-in-out;
     animation: sk-stretchdelay 1.2s infinite ease-in-out
 }

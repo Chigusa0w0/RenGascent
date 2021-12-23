@@ -7,7 +7,7 @@
         href="https://cdn.jsdelivr.net/npm/monaco-editor@0.31.1/min/vs/editor/editor.main.css" />
 </head>
 
-<body>
+<body style="height:100%">
     <div id="loading">
         <div class="spinner">
             <div class="rect1"></div>
@@ -64,11 +64,11 @@
         var geval = eval;
         require(["require", "vs/editor/editor.main"], function (require) {
             "use strict";
-            var loading = document.getElementById("loading");
-            loading.parentNode.removeChild(loading);
-            document.body.style.height = "100%";
             
             rgRengascent.Rengascent.create("monaco-editor", "moana-viewer", "");
+
+            var loading = document.getElementById("loading");
+            loading.parentNode.removeChild(loading);
         });
     </script>
 </body>
