@@ -26,19 +26,6 @@ import { Environment } from './rengascent.env';
             setVarFromParentFrame       - eval version of setEnvironmentVariable
 */
 
-declare global {
-    interface Window { 
-        messageBuffer: (IMessageBufferItem[] | null);
-        messageOrigin: string;
-    }
-}
-
-interface IMessageBufferItem {
-    method: string;
-    callback: string | null;
-    value: string | null;
-}
-
 export module Protocol {
 
     export function createChannel(editorId: string, viewerId: string) {

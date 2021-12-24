@@ -13,9 +13,7 @@
     "browserify-moana": "browserify ./out/moana.js --standalone rgMoana > ./js/moana.js",
     "browserify-rengascent": "browserify ./out/rengascent.js --standalone rgRengascent > ./js/rengascent.js",
     "browserify-all": "npm run browserify-monaco && npm run browserify-moana && npm run browserify-rengascent",
-    "copy-preload": "powershell cp ts/rengascent.preload.js js/rengascent.preload.js",
-    "copy-visual": "powershell cp ts/rengascent.visual.js js/rengascent.visual.js",
-    "copy-all": "npm run copy-preload && npm run copy-visual",
-    "build": "tsc && npm run browserify-all && npm run copy-all"
+    "browserify-utils": "browserify ./out/utils.js --standalone rgUtils > ./js/utils.js",
+    "build": "tsc && npm run browserify-all && npm run browserify-utils"
   }
 }
