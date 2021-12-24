@@ -65,12 +65,19 @@ export module Monaco {
         const editor = window.__editors[editorId];
 
         if (editor !== null && editor !== undefined) {
+            let model = editor.getModel();
+            if (!model) return;
+
             editor.executeEdits('monaco', [{ 
                 range: new monaco.Range(1, 1, 2147483647, 1), 
                 text: content, 
                 forceMoveMarkers: false 
             }]);
+
+            editor.setPosition(new monaco.Position(1, 1));
         }
+
+        editor.focus();
     }
 
     export function updateContent(editorId: string, content: string): void {
@@ -94,6 +101,8 @@ export module Monaco {
             const targetPosition = model.getPositionAt(currentIndex + content.length);
             editor.setPosition(targetPosition);
         }
+
+        editor.focus();
     }
 
     export function fetchContent(editorId: string): string {

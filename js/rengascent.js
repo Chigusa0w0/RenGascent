@@ -1042,12 +1042,17 @@ var Monaco;
     function changeContent(editorId, content) {
         var editor = window.__editors[editorId];
         if (editor !== null && editor !== undefined) {
+            var model = editor.getModel();
+            if (!model)
+                return;
             editor.executeEdits('monaco', [{
                     range: new monaco_editor_1.monaco.Range(1, 1, 2147483647, 1),
                     text: content,
                     forceMoveMarkers: false
                 }]);
+            editor.setPosition(new monaco_editor_1.monaco.Position(1, 1));
         }
+        editor.focus();
     }
     Monaco.changeContent = changeContent;
     function updateContent(editorId, content) {
@@ -1068,6 +1073,7 @@ var Monaco;
             var targetPosition = model.getPositionAt(currentIndex + content.length);
             editor.setPosition(targetPosition);
         }
+        editor.focus();
     }
     Monaco.updateContent = updateContent;
     function fetchContent(editorId) {
